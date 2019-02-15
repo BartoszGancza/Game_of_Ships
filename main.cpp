@@ -17,6 +17,7 @@ int enemyHits = 0;
 int playerHits = 0;
 
 enum Direction {up = 1, down = 2, left = 3, right = 4};
+enum FieldState {water, ship, hit, miss, attacked};
 
 class Ship {
 public:
@@ -66,16 +67,16 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
             switch (shipsArray[i-1].shipDirection) {
                 case Direction::up: // up
                 // these first check for bounds, then if there is any ship in the way
-                    if ((y-(i-1)) >= 0 && board[x][y] == 0) {
+                    if ((y-(i-1)) >= 0 && board[x][y] == water) {
                         for (int j = 1; j < i; j++) {
-                            if (board[x][y - j] == 1) {
+                            if (board[x][y - j] == ship) {
                                 overlap = true;
                             }
                         }
                         if (!overlap) {
-                            board[x][y] = 1;
+                            board[x][y] = ship;
                             for (int j = 1; j < i; j++) {
-                                board[x][y - j] = 1;
+                                board[x][y - j] = ship;
                             }
                             shipSet = true;
                         } else {
@@ -85,16 +86,16 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
                     }
                     break;
                 case Direction::down: // down
-                    if ((y+(i-1)) <= 9 && board[x][y] == 0) {
+                    if ((y+(i-1)) <= 9 && board[x][y] == water) {
                         for (int j = 1; j < i; j++) {
-                            if (board[x][y + j] == 1) {
+                            if (board[x][y + j] == ship) {
                                 overlap = true;
                             }
                         }
                         if (!overlap) {
-                            board[x][y] = 1;
+                            board[x][y] = ship;
                             for (int j = 1; j < i; j++) {
-                                board[x][y + j] = 1;
+                                board[x][y + j] = ship;
                             }
                             shipSet = true;
                         } else {
@@ -104,16 +105,16 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
                     }
                     break;
                 case Direction::left: // left
-                    if ((x-(i-1)) >= 0 && board[x][y] == 0) {
+                    if ((x-(i-1)) >= 0 && board[x][y] == water) {
                         for (int j = 1; j < i; j++) {
-                            if (board[x - j][y] == 1) {
+                            if (board[x - j][y] == ship) {
                                 overlap = true;
                             }
                         }
                         if (!overlap) {
-                            board[x][y] = 1;
+                            board[x][y] = ship;
                             for (int j = 1; j < i; j++) {
-                                board[x - j][y] = 1;
+                                board[x - j][y] = ship;
                             }
                             shipSet = true;
                         } else {
@@ -123,16 +124,16 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
                     }
                     break;
                 case Direction::right: // right
-                    if ((x+(i-1)) <= 9 && board[x][y] == 0) {
+                    if ((x+(i-1)) <= 9 && board[x][y] == water) {
                         for (int j = 1; j < i; j++) {
-                            if (board[x + j][y] == 1) {
+                            if (board[x + j][y] == ship) {
                                 overlap = true;
                             }
                         }
                         if (!overlap) {
-                            board[x][y] = 1;
+                            board[x][y] = ship;
                             for (int j = 1; j < i; j++) {
-                                board[x + j][y] = 1;
+                                board[x + j][y] = ship;
                             }
                             shipSet = true;
                         } else {
@@ -150,11 +151,11 @@ void PrintBoards() {
     cout << "   Player Board               Enemy Board" << endl;
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
-            if (playerBoard[i][j] == 1) {
+            if (playerBoard[i][j] == ship) {
                 cout << "□ ";
-            } else if (playerBoard[i][j] == 2){
+            } else if (playerBoard[i][j] == hit){
                 cout << "⊠ ";
-            } else if (playerBoard[i][j] == 3) {
+            } else if (playerBoard[i][j] == miss) {
                 cout << "* ";
             } else {
                 cout << "~ ";
@@ -162,11 +163,11 @@ void PrintBoards() {
         }
         cout << "      ";
         for (int n = 0; n < 10; n++) {
-            if (enemyBoard[i][n] == 1) {
+            if (enemyBoard[i][n] == ship) {
                 cout << "□ ";
-            } else if (enemyBoard[i][n] == 2){
+            } else if (enemyBoard[i][n] == hit){
                 cout << "⊠ ";
-            } else if (enemyBoard[i][n] == 3) {
+            } else if (enemyBoard[i][n] == miss) {
                 cout << "* ";
             } else {
                 cout << "~ ";
@@ -177,12 +178,12 @@ void PrintBoards() {
 }
 
 int Attack(vector<vector<int>> &board, int &x, int &y) {
-    if (board[x][y] == 1) {
-        return 2;
-    } else if (board[x][y] == 0) {
-        return 3;
-    } else if (board[x][y] == 2 || board[x][y] == 3) {
-        return 4;
+    if (board[x][y] == ship) {
+        return hit;
+    } else if (board[x][y] == water) {
+        return miss;
+    } else if (board[x][y] == hit || board[x][y] == miss) {
+        return attacked;
     }
 }
 
@@ -194,15 +195,15 @@ void EnemyTurn() {
     RollAttackCords(x, y);
     attackEffect = Attack(playerBoard, x, y);
     
-    if (attackEffect == 4) { // if that field already attacked before
+    if (attackEffect == attacked) { // if that field already attacked before
         EnemyTurn();
-    } else if (attackEffect == 2) { // if it's a hit
-        playerBoard[x][y] = 2;
+    } else if (attackEffect == hit) { // if it's a hit
+        playerBoard[x][y] = hit;
         enemyHits += 1;
-        cout << "Hit in the " << x << "," << y << " field." << endl;
-    } else if (attackEffect == 3) { // if it's a miss
-        playerBoard[x][y] = 3;
-        cout << "Miss in the " << x << "," << y << " field." << endl;
+        cout << "Hit in the " << x + 1 << "," << y + 1 << " field." << endl;
+    } else if (attackEffect == miss) { // if it's a miss
+        playerBoard[x][y] = miss;
+        cout << "Miss in the " << x + 1 << "," << y + 1 << " field." << endl;
     }
 }
 
@@ -214,11 +215,11 @@ int main(int argc, char **argv)
     SetUpBoards(enemyBoard, enemyShips);
     SetUpBoards(playerBoard, playerShips);
     string endProgram;
-    cout << "\x1B[2J\x1B[H";
+    //cout << "\x1B[2J\x1B[H";
     do {
         PrintBoards();
         cin >> endProgram;
-        cout << "\x1B[2J\x1B[H";
+        //cout << "\x1B[2J\x1B[H";
         EnemyTurn();
     } while (endProgram != "t" && enemyHits != 10);
     
