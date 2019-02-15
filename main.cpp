@@ -2,6 +2,7 @@
 #include <random>
 #include <chrono>
 #include <vector>
+#include <string>
 
 using namespace std;
 
@@ -14,6 +15,8 @@ vector<vector<int>> playerBoard(10, vector<int> (10, 0));
 
 int enemyHits = 0;
 int playerHits = 0;
+
+enum Direction {up = 1, down = 2, left = 3, right = 4};
 
 class Ship {
 public:
@@ -61,7 +64,7 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
             shipSet = false;
             overlap = false;
             switch (shipsArray[i-1].shipDirection) {
-                case 1: // up
+                case Direction::up: // up
                 // these first check for bounds, then if there is any ship in the way
                     if ((y-(i-1)) >= 0 && board[x][y] == 0) {
                         for (int j = 1; j < i; j++) {
@@ -81,7 +84,7 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
                         }
                     }
                     break;
-                case 2: // down
+                case Direction::down: // down
                     if ((y+(i-1)) <= 9 && board[x][y] == 0) {
                         for (int j = 1; j < i; j++) {
                             if (board[x][y + j] == 1) {
@@ -100,7 +103,7 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
                         }
                     }
                     break;
-                case 3: // left
+                case Direction::left: // left
                     if ((x-(i-1)) >= 0 && board[x][y] == 0) {
                         for (int j = 1; j < i; j++) {
                             if (board[x - j][y] == 1) {
@@ -119,7 +122,7 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
                         }
                     }
                     break;
-                case 4: // right
+                case Direction::right: // right
                     if ((x+(i-1)) <= 9 && board[x][y] == 0) {
                         for (int j = 1; j < i; j++) {
                             if (board[x + j][y] == 1) {
@@ -206,8 +209,8 @@ void EnemyTurn() {
 int main(int argc, char **argv)
 {
     
-    vector<Ship> enemyShips(7);
-    vector<Ship> playerShips(7);
+    vector<Ship> enemyShips(4);
+    vector<Ship> playerShips(4);
     SetUpBoards(enemyBoard, enemyShips);
     SetUpBoards(playerBoard, playerShips);
     string endProgram;
