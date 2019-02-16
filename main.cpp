@@ -18,6 +18,7 @@ int playerHits = 0;
 
 enum Direction {up = 1, down = 2, left = 3, right = 4};
 enum FieldState {water, ship, hit, miss, attacked};
+enum Turn {player, enemy};
 
 class Ship {
 public:
@@ -148,13 +149,20 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
 }
 
 void PrintBoards() {
-    cout << "   Player Board               Enemy Board" << endl;
+
+    cout << "      Player Board                  Enemy Board" << endl;
+    cout << "   1 2 3 4 5 6 7 8 9 10         1 2 3 4 5 6 7 8 9 10" << endl;
     for (int i = 0; i < 10; i++) {
+        if (i == 9) {
+            cout << i + 1 << " ";
+        } else {
+            cout << i + 1 << "  ";
+        }
         for (int j = 0; j < 10; j++) {
             if (playerBoard[i][j] == ship) {
-                cout << "□ ";
+                cout << "S ";
             } else if (playerBoard[i][j] == hit){
-                cout << "⊠ ";
+                cout << "X ";
             } else if (playerBoard[i][j] == miss) {
                 cout << "* ";
             } else {
@@ -162,11 +170,16 @@ void PrintBoards() {
             }
         }
         cout << "      ";
+        if (i == 9) {
+            cout << i + 1 << " ";
+        } else {
+            cout << i + 1 << "  ";
+        }
         for (int n = 0; n < 10; n++) {
             if (enemyBoard[i][n] == ship) {
-                cout << "□ ";
+                cout << "S ";
             } else if (enemyBoard[i][n] == hit){
-                cout << "⊠ ";
+                cout << "X ";
             } else if (enemyBoard[i][n] == miss) {
                 cout << "* ";
             } else {
@@ -175,6 +188,7 @@ void PrintBoards() {
         }
         cout << endl;
     }
+    cout << endl;
 }
 
 int Attack(vector<vector<int>> &board, int &x, int &y) {
@@ -187,40 +201,63 @@ int Attack(vector<vector<int>> &board, int &x, int &y) {
     }
 }
 
-void EnemyTurn() {
+void Turn(int whoseTurn) {
     int x = 0;
     int y = 0;
     int attackEffect = 0;
-    
-    RollAttackCords(x, y);
-    attackEffect = Attack(playerBoard, x, y);
-    
+
+    int *fieldAddress = nullptr;
+
+
+    if (whoseTurn == enemy) {
+        RollAttackCords(x, y);
+        attackEffect = Attack(playerBoard, x, y);
+        fieldAddress = &playerBoard[x][y];
+    } else if (whoseTurn == player) {
+        cout << "Input attack coordinates (Y then X separated by space):";
+        cin >> x >> y;
+        cout << endl;
+        x -= 1;
+        y -= 1;
+        attackEffect = Attack(enemyBoard, x, y);
+        fieldAddress = &enemyBoard[x][y];
+    }
+
     if (attackEffect == attacked) { // if that field already attacked before
-        EnemyTurn();
+        Turn(whoseTurn);
     } else if (attackEffect == hit) { // if it's a hit
-        playerBoard[x][y] = hit;
-        enemyHits += 1;
-        cout << "Hit in the " << x + 1 << "," << y + 1 << " field." << endl;
+        *fieldAddress = hit;
+        if (whoseTurn == player) {
+            playerHits += 1;
+            cout << "You hit in the " << x + 1 << "," << y + 1 << " field." << endl;
+        } else {
+            enemyHits += 1;
+            cout << "Enemy hit in the " << x + 1 << "," << y + 1 << " field." << endl;
+        }
+        cout << endl;
     } else if (attackEffect == miss) { // if it's a miss
-        playerBoard[x][y] = miss;
-        cout << "Miss in the " << x + 1 << "," << y + 1 << " field." << endl;
+        *fieldAddress = miss;
+        if (whoseTurn == player) {
+            cout << "You missed in the " << x + 1 << "," << y + 1 << " field." << endl;
+        } else {
+            cout << "Enemy missed in the " << x + 1 << "," << y + 1 << " field." << endl;
+        }
+        cout << endl;
     }
 }
 
 int main(int argc, char **argv)
 {
-    
     vector<Ship> enemyShips(4);
     vector<Ship> playerShips(4);
     SetUpBoards(enemyBoard, enemyShips);
     SetUpBoards(playerBoard, playerShips);
-    string endProgram;
     //cout << "\x1B[2J\x1B[H";
     do {
         PrintBoards();
-        cin >> endProgram;
         //cout << "\x1B[2J\x1B[H";
-        EnemyTurn();
-    } while (endProgram != "t" && enemyHits != 10);
+        Turn(player);
+        Turn(enemy);
+    } while (playerHits != 10 && enemyHits != 10);
     
 }
