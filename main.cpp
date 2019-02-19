@@ -23,12 +23,10 @@ enum Turn {player, enemy};
 class Ship {
 public:
     Ship();
-    int shipSize; // 1 - frigate, 2 - cruiser, 3 - destroyer, 4 - battleship
     int shipDirection; // 1 - up, 2 - down, 3 - left, 4 - right
 };
 
 Ship::Ship() {
-    shipSize = 0;
     shipDirection = 0;
 }
 
@@ -56,7 +54,6 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
     
     for (int i = 1; i<=numberOfShips; i++) {
 
-        shipsArray[i-1].shipSize = i;
         bool shipSet;
         bool overlap;
 
@@ -227,21 +224,12 @@ void Turn(int whoseTurn) {
         Turn(whoseTurn);
     } else if (attackEffect == hit) { // if it's a hit
         *fieldAddress = hit;
-        if (whoseTurn == player) {
-            playerHits += 1;
-            cout << "You hit in the " << x + 1 << "," << y + 1 << " field." << endl;
-        } else {
-            enemyHits += 1;
-            cout << "Enemy hit in the " << x + 1 << "," << y + 1 << " field." << endl;
-        }
+        (whoseTurn == player ? playerHits += 1 : enemyHits += 1);
+        cout << (whoseTurn == player ? "You" : "Enemy") << " hit in the " << x + 1 << "," << y + 1 << " field." << endl;
         cout << endl;
     } else if (attackEffect == miss) { // if it's a miss
         *fieldAddress = miss;
-        if (whoseTurn == player) {
-            cout << "You missed in the " << x + 1 << "," << y + 1 << " field." << endl;
-        } else {
-            cout << "Enemy missed in the " << x + 1 << "," << y + 1 << " field." << endl;
-        }
+        cout << (whoseTurn == player ? "You" : "Enemy") << " missed in the " << x + 1 << "," << y + 1 << " field." << endl;
         cout << endl;
     }
 }
