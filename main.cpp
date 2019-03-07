@@ -128,16 +128,17 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
     }
 }
 
+// sets up the vector of all enemy attacks and shuffles it to randomize them
 void SetUpEnemyAttacks(vector<vector<int>> &attackVector) {
-    int x = 1, y = 1;
+    int x = 0, y = 0;
     unsigned seed = unsigned(chrono::system_clock::now().time_since_epoch().count());
     generator.seed(seed);
 
     for (int i = 0; i < 100; ++i) {
         attackVector.push_back({x, y});
         ++y;
-        if (y == 11) {
-            y = 1;
+        if (y == 10) {
+            y = 0;
             ++x;
         }
     }
@@ -207,17 +208,12 @@ int AttackEffect(vector<vector<int>> &board, int &x, int &y) {
     }
 }
 
+// pulls a set of coordinates from the end of vector and removes it after to avoid repeating attacks
 void EnemyAttack(vector<vector<int>> &attackVector, int &x, int &y) {
-    int currSize = int(attackVector.size());
-    uniform_int_distribution<int> range(0, currSize-1);
-
-    unsigned seed = unsigned(chrono::system_clock::now().time_since_epoch().count());
-    generator.seed(seed);
-    int roll = range(generator);
-
-    x = attackVector[roll][0];
-    y = attackVector[roll][1];
-    attackVector.erase(attackVector.begin() + roll);
+    auto currEnd = attackVector.back();
+    x = currEnd[0];
+    y = currEnd[1];
+    attackVector.pop_back();
 }
 
 // "Main logic" of the game
