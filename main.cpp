@@ -13,6 +13,7 @@ uniform_int_distribution<int> coordinate(0,9);
 
 vector<vector<int>> enemyBoard(10, vector<int> (10, 0));
 vector<vector<int>> playerBoard(10, vector<int> (10, 0));
+vector<vector<int>> attackVector;
 
 static int enemyHits, playerHits;
 
@@ -127,6 +128,23 @@ void SetUpBoards(vector<vector<int>> &board, vector<Ship> &shipsArray) {
     }
 }
 
+void SetUpEnemyAttacks(vector<vector<int>> &attackVector) {
+    int x = 1, y = 1;
+    unsigned seed = unsigned(chrono::system_clock::now().time_since_epoch().count());
+    generator.seed(seed);
+
+    for (int i = 0; i < 100; ++i) {
+        attackVector.push_back({x, y});
+        ++y;
+        if (y == 11) {
+            y = 1;
+            ++x;
+        }
+    }
+
+    shuffle(attackVector.begin(), attackVector.end(), generator);
+}
+
 // prints the boards out in a visual format
 void PrintBoards() {
     stringstream boards;
@@ -177,7 +195,7 @@ void PrintBoards() {
 }
 
 // evaluates the effect of an attack
-int Attack(vector<vector<int>> &board, int &x, int &y) {
+int AttackEffect(vector<vector<int>> &board, int &x, int &y) {
     if (board[x][y] == ship) {
         return hit;
     } else if (board[x][y] == water) {
@@ -187,6 +205,19 @@ int Attack(vector<vector<int>> &board, int &x, int &y) {
     } else {
         return 5; // this should absolutely never happen - it's here to disable the end of non-void function warning
     }
+}
+
+void EnemyAttack(vector<vector<int>> &attackVector, int &x, int &y) {
+    int currSize = int(attackVector.size());
+    uniform_int_distribution<int> range(0, currSize-1);
+
+    unsigned seed = unsigned(chrono::system_clock::now().time_since_epoch().count());
+    generator.seed(seed);
+    int roll = range(generator);
+
+    x = attackVector[roll][0];
+    y = attackVector[roll][1];
+    attackVector.erase(attackVector.begin() + roll);
 }
 
 // "Main logic" of the game
@@ -199,8 +230,8 @@ void Turn(int whoseTurn) {
 
     // depending on who's attacking, make a random roll or let the player choose the field
     if (whoseTurn == enemy) {
-        RollAttackCords(x, y);
-        attackEffect = Attack(playerBoard, x, y); // checks the field status and returns an attack effect
+        EnemyAttack(attackVector, x, y);
+        attackEffect = AttackEffect(playerBoard, x, y); // checks the field status and returns an attack effect
         fieldAddress = &playerBoard[x][y]; // sets the pointer to appropriate field on player board
     } else if (whoseTurn == player) {
         cout << "Input attack coordinates (Y then X separated by space):";
@@ -208,7 +239,7 @@ void Turn(int whoseTurn) {
         cout << endl;
         x -= 1;
         y -= 1;
-        attackEffect = Attack(enemyBoard, x, y); // checks the field status and returns an attack effect
+        attackEffect = AttackEffect(enemyBoard, x, y); // checks the field status and returns an attack effect
         fieldAddress = &enemyBoard[x][y]; // sets the pointer to appropriate field on enemy board
     }
 
@@ -231,6 +262,7 @@ int main(int argc, char **argv)
     enemyHits = 0, playerHits = 0;
     vector<Ship> enemyShips(4);
     vector<Ship> playerShips(4);
+    SetUpEnemyAttacks(attackVector);
     SetUpBoards(enemyBoard, enemyShips);
     SetUpBoards(playerBoard, playerShips);
     //cout << "\x1B[2J\x1B[H";
