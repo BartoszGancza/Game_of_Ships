@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <utility>
 
 using namespace std;
 
@@ -35,13 +36,6 @@ void RollTheDice(int &directionRoll, int &x, int &y) {
     unsigned seed = unsigned(chrono::system_clock::now().time_since_epoch().count());
     generator.seed(seed);
     directionRoll = direction(generator);
-    x = coordinate(generator);
-    y = coordinate(generator);
-}
-
-void RollAttackCords(int &x, int &y) {
-    unsigned seed = unsigned(chrono::system_clock::now().time_since_epoch().count());
-    generator.seed(seed);
     x = coordinate(generator);
     y = coordinate(generator);
 }
@@ -216,6 +210,19 @@ void EnemyAttack(vector<vector<int>> &attackVector, int &x, int &y) {
     attackVector.pop_back();
 }
 
+
+// after the hit moves attacks on four adjacent fields to the end of the vector (simulating more intelligent attacking pattern)
+void SwapForAttack(vector<vector<int>> &attackVector, int &x, int &y) {
+    auto pointInVector = attackVector.end()-1;
+    for (auto attack : attackVector) {
+        if ((attack[0] == x-1 && attack[1] == y) || (attack[0] == x+1 && attack[1] == y) ||
+        (attack[1] == y-1 && attack[0] == x) || (attack[1] == y+1 && attack[0] == x)) {
+            swap(attack, *pointInVector);
+            --pointInVector;
+        }
+    }
+}
+
 // "Main logic" of the game
 void Turn(int whoseTurn) {
     int x = 0;
@@ -228,6 +235,9 @@ void Turn(int whoseTurn) {
     if (whoseTurn == enemy) {
         EnemyAttack(attackVector, x, y);
         attackEffect = AttackEffect(playerBoard, x, y); // checks the field status and returns an attack effect
+        if (attackEffect == hit) {
+            SwapForAttack(attackVector, x, y);
+        }
         fieldAddress = &playerBoard[x][y]; // sets the pointer to appropriate field on player board
     } else if (whoseTurn == player) {
         cout << "Input attack coordinates (Y then X separated by space):";
