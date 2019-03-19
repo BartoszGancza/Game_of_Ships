@@ -240,9 +240,11 @@ void Turn(int whoseTurn) {
         }
         fieldAddress = &playerBoard[x][y]; // sets the pointer to appropriate field on player board
     } else if (whoseTurn == player) {
-        cout << "Input attack coordinates (Y then X separated by space):";
-        cin >> x >> y;
-        cout << endl;
+        do {
+            cout << "Input attack coordinates (Y then X separated by space):";
+            cin >> x >> y;
+            cout << endl;
+        } while (!(x > 0 && x < 11) || !(y > 0 && y < 11));
         x -= 1;
         y -= 1;
         attackEffect = AttackEffect(enemyBoard, x, y); // checks the field status and returns an attack effect
@@ -274,7 +276,6 @@ int main(int argc, char **argv)
     //cout << "\x1B[2J\x1B[H";
     do {
         PrintBoards();
-        //cout << "\x1B[2J\x1B[H";
         Turn(player);
         Turn(enemy);
     } while (playerHits != 10 && enemyHits != 10);
